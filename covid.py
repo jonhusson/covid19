@@ -268,6 +268,9 @@ def plot_covid(subdata,choice,**kwargs):
                 (np.diff(subdata['deaths'])/np.diff(days))/subdata['deaths'][0:-1]*100,'-',lw=1,color='#B22222')
         ax2.set_ylabel('percent increase per day',color='#B22222')
         ax2.tick_params(axis='y', labelcolor='#B22222')
+        ylim=ax2.get_ylim()
+        ax2.set_ylim([0,ylim[1]])
+        
         ax2.set_yticklabels(['{:,}'.format(int(x)) for x in ax2.get_yticks().tolist()])
 
         ax.set_xlabel('days since first case')
