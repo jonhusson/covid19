@@ -356,7 +356,8 @@ VI=[("2020-03-23",  539, 12, 44, 0),
     ("2020-04-01", 1066, 25, 72, 0),
     ("2020-04-02", 1121, 31, 72, 2),
     ("2020-04-03", 1174, 35, 74, 2),
-    ("2020-04-06", 1266, 39, 79, 2)]
+    ("2020-04-06", 1266, 39, 79, 2),
+    ("2020-04-07", 1291, 43, 79, 2)]
 
 VI_days=pd.to_datetime([v[0] for v in VI])
 VI_days=list(VI_days-VI_days[0])
@@ -412,7 +413,7 @@ ax.set_yticklabels(['{:,}'.format(int(x)) for x in ax.get_yticks().tolist()])
 
 ax2.legend(loc=4)
 
-#make second y-axis
+#make second subplot
 ax = fig.add_subplot(312)
 
 
@@ -436,7 +437,8 @@ ax2.plot(VI_days[1:],
         np.diff([v[3] for v in VI])/np.diff(VI_days),'-o',markersize=3,color='#6495ED')
 
 ax2.tick_params(axis='y', labelcolor='#6495ED')
-
+ylim=ax2.get_ylim()
+ax2.set_ylim([0,ylim[1]])
         
 ax.set_ylabel('new cases per day')
 
