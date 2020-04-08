@@ -55,22 +55,28 @@ def fit_covid(days,subdata,kwargs,ax):
     #make an exponential model
     y_pred=subdata['cases'][kwargs['fit'][0]]*np.exp(k[0]*(days-days[kwargs['fit'][0]]))
     
+    #bundle up the model for export
+    myfits=[[k,y_pred]]
+    
     if kwargs['fit_choice']=='both' or kwargs['fit_choice']=='exp':
         #plot the model
         ax.plot(days,
                 y_pred,'--',lw=0.75,color='k',label=r'exp. model: T$_2$ = %2.1f days' % (np.log(2)/k[0]))
  
-    #fit the data with an exponential curve, over a certain window
+    #fit the data with a line, over a certain window
     m=np.polyfit(days[kwargs['fit'][0]:kwargs['fit'][1]],
                  subdata['cases'][kwargs['fit'][0]:kwargs['fit'][1]],1)
     
-    #make an exponential model
+    #make a linear model
     y_pred1=m[1]+days*m[0]
+    
+    #bundle up the model for export
+    myfits.append([m,y_pred1])
     
     if kwargs['fit_choice']=='both' or kwargs['fit_choice']=='linear':
         #plot the model
         ax.plot(days,
-                y_pred1,'-',lw=0.5,color='k',label=r'linear model: %s cases day$^{-1}$' % ('{:,}'.format(int(m[0]))))
+                y_pred1,'-.',lw=0.75,color='k',label=r'linear model: %s cases day$^{-1}$' % ('{:,}'.format(int(m[0]))))
 
        
     #highlight which section of data was fitted
@@ -80,6 +86,8 @@ def fit_covid(days,subdata,kwargs,ax):
                     facecolor='#EEE8AA',zorder=0,edgecolor='none',label=note)
     
     ax.legend(loc=2)
+    
+    return myfits
             
 def plot_covid(subdata,choice,**kwargs):
     """
@@ -100,7 +108,7 @@ def plot_covid(subdata,choice,**kwargs):
     yscale : string, 'linear' or 'log': sets y-axis of first sub-plot to be 
     either linear or logarithmic.  Default is 'linear'
     
-    xlim : list (numeric, [a, b]): set x-axes of all three sub-plots. Default
+    xlow :  numeric, set lower x-limit on all three sub-plots. Default
     shows the full time series for your chosen slice.
     
     fit : list (integers, [c, d]): select a subset of days for curve fitting. 
@@ -175,16 +183,19 @@ def plot_covid(subdata,choice,**kwargs):
         #default is linear scale
         if kwargs is None:
             kwargs=dict()
-            kwargs['xlim']=[-1,days[-1]+1]
-        elif kwargs is not None and 'xlim' not in kwargs:
-            kwargs['xlim']=[-1,days[-1]+1]
+            kwargs['xlow']=-1
+        elif kwargs is not None and 'xlow' not in kwargs:
+            kwargs['xlow']=-1
 
+        kwargs['xlim']=[kwargs['xlow'],days[-1]+1]
         ax.set_xlim(kwargs['xlim'])
         ax.grid(axis='x')
 
+        myfits=[]
         if kwargs is not None and 'fit' in kwargs:
             #function to fit the data
-            fit_covid(days,subdata,kwargs,ax)
+            myfits=fit_covid(days,subdata,kwargs,ax)
+            
             
         #set the y-axis scale
         if kwargs is not None and 'yscale' in kwargs:
@@ -225,6 +236,22 @@ def plot_covid(subdata,choice,**kwargs):
                facecolor='#ADD8E6',
                edgecolor='none',
                zorder=0)
+        
+        ylim=ax.get_ylim()
+        ax.set_ylim([0,ylim[1]])
+        
+        #plot case increases predicted by models
+        if len(myfits)>0 and kwargs['fit_choice']=='exp':
+            ax.plot(days[1:],
+                    np.diff(myfits[0][1])/np.diff(days),'--',lw=1,color='k')
+        elif len(myfits)>0 and kwargs['fit_choice']=='linear':
+            ax.plot(days[1:],
+                    np.diff(myfits[1][1])/np.diff(days),'-.',lw=1,color='k')
+        elif len(myfits)>0 and kwargs['fit_choice']=='both':
+            ax.plot(days[1:],
+                    np.diff(myfits[0][1])/np.diff(days),'--',lw=1,color='k')
+            ax.plot(days[1:],
+                    np.diff(myfits[1][1])/np.diff(days),'-.',lw=1,color='k')
 
         #stylize plot
         ax.set_ylabel('new cases per day',color='#6495ED')
@@ -259,10 +286,31 @@ def plot_covid(subdata,choice,**kwargs):
         days=days[idx]
         subdata=subdata[idx]
         
+        if len(myfits)>0:
+            myfits[0][1]=myfits[0][1][idx]
+            myfits[1][1]=myfits[1][1][idx]
+            myfits[1][1][myfits[1][1]<0]=np.nan
+            
         #plot percent case increase per day vs. day number
         ax.plot(days[1:],
                 (np.diff(subdata['cases'])/np.diff(days))/subdata['cases'][0:-1]*100,'-',color='#6495ED')
             
+        ylim=ax.get_ylim()
+        ax.set_ylim([0,ylim[1]])
+        
+        #plot percent case increases predicted by models
+        if len(myfits)>0 and kwargs['fit_choice']=='exp':
+            ax.plot(days[1:],
+                    (np.diff(myfits[0][1])/np.diff(days))/myfits[0][1][0:-1]*100,'--',lw=1,color='k')
+        elif len(myfits)>0 and kwargs['fit_choice']=='linear':
+            ax.plot(days[1:],
+                    (np.diff(myfits[1][1])/np.diff(days))/myfits[1][1][0:-1]*100,'-.',lw=1,color='k')
+        elif len(myfits)>0 and kwargs['fit_choice']=='both':
+            ax.plot(days[1:],
+                    (np.diff(myfits[0][1])/np.diff(days))/myfits[0][1][0:-1]*100,'--',lw=1,color='k')
+            ax.plot(days[1:],
+                    (np.diff(myfits[1][1])/np.diff(days))/myfits[1][1][0:-1]*100,'-.',lw=1,color='k')
+
         ax.set_ylabel('% increase per day',color='#6495ED')
         ax.tick_params(axis='y', labelcolor='#6495ED')
         
@@ -285,7 +333,7 @@ def plot_covid(subdata,choice,**kwargs):
         ax.set_xlabel('days since first case')
         ax.set_xlim(kwargs['xlim'])
         ax.grid(axis='x')
-
+        
     #case of no data found
     else:
         ax=fig.add_subplot(111)
@@ -328,7 +376,7 @@ subdata,choice_text=slice_data(states,choice)
 
 plot_covid(subdata,choice_text,
            fit=[60,70],
-           xlim=[40,77],
+           xlow=40,
            fit_choice='both',
            yscale='linear')
 
@@ -343,7 +391,7 @@ subdata=subdata.reset_index()
 
 plot_covid(subdata,county_choice,
            fit=[25,35],
-           xlim=[10,37],
+           xlow=10,
            fit_choice='linear',
            yscale='linear')
 
