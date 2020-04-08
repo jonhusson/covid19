@@ -136,8 +136,16 @@ def plot_covid(subdata,choice,**kwargs):
                 transform=ax.transAxes,
                 horizontalalignment='left',
                 verticalalignment='bottom')
-
+        
         ax.text(1,1,
+                '%s total deaths' % '{:,}'.format(int(max(subdata['deaths']))),
+                transform=ax.transAxes,
+                fontweight='bold',
+                color='#B22222',
+                horizontalalignment='right',
+                verticalalignment='bottom')
+
+        ax.text(1,1.1,
                 '%s total cases' % '{:,}'.format(int(max(subdata['cases']))),
                 transform=ax.transAxes,
                 fontweight='bold',
@@ -187,12 +195,12 @@ def plot_covid(subdata,choice,**kwargs):
         #make second y-axis
         ax2 = ax.twinx()
         
-        #plot cumulative fatalities vs. day number
+        #plot cumulative deaths vs. day number
         ax2.plot(days,
                 subdata['deaths'],'-',lw=1, color='#B22222')
                 
         #stylize plot
-        ax2.set_ylabel('total number of fatalities',color='#B22222')
+        ax2.set_ylabel('total number of deaths',color='#B22222')
         ax2.tick_params(axis='y', labelcolor='#B22222')
         
         #set the y-axis scale
@@ -234,7 +242,7 @@ def plot_covid(subdata,choice,**kwargs):
         #plot fatality increase per day vs. day number
         ax2.plot(days[1:],
                 np.diff(subdata['deaths'])/np.diff(days),'-',lw=1,color='#B22222')
-        ax2.set_ylabel('new fatalities per day',color='#B22222')
+        ax2.set_ylabel('new deaths per day',color='#B22222')
         ax2.tick_params(axis='y', labelcolor='#B22222')
         ylim=ax2.get_ylim()
         ax2.set_ylim([0,ylim[1]])
@@ -254,7 +262,7 @@ def plot_covid(subdata,choice,**kwargs):
         ax.plot(days[1:],
                 (np.diff(subdata['cases'])/np.diff(days))/subdata['cases'][0:-1]*100,'-',color='#6495ED')
             
-        ax.set_ylabel('percent increase per day',color='#6495ED')
+        ax.set_ylabel('% increase per day',color='#6495ED')
         ax.tick_params(axis='y', labelcolor='#6495ED')
         
         #make y-axis labels comma-separated
@@ -266,7 +274,7 @@ def plot_covid(subdata,choice,**kwargs):
         #plot percent fatality increase per day vs. day number
         ax2.plot(days[1:],
                 (np.diff(subdata['deaths'])/np.diff(days))/subdata['deaths'][0:-1]*100,'-',lw=1,color='#B22222')
-        ax2.set_ylabel('percent increase per day',color='#B22222')
+        ax2.set_ylabel('% increase per day',color='#B22222')
         ax2.tick_params(axis='y', labelcolor='#B22222')
         ylim=ax2.get_ylim()
         ax2.set_ylim([0,ylim[1]])
