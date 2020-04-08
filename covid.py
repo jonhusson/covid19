@@ -149,6 +149,7 @@ def plot_covid(subdata,choice,**kwargs):
                 '%s total cases' % '{:,}'.format(int(max(subdata['cases']))),
                 transform=ax.transAxes,
                 fontweight='bold',
+                color='#6495ED',
                 horizontalalignment='right',
                 verticalalignment='bottom')
     
