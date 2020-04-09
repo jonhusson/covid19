@@ -9,20 +9,24 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 
-def slice_global_data(cases,deaths,admin0,**kwargs):
+def slice_global_data(cases,deaths,**kwargs):
     non_date_hdrs=['Province/State',
      'Country/Region',
      'Lat',
      'Long']
 
     if kwargs is not None and 'admin1' in kwargs: 
-        sub_confirmed=globe_confirmed[(globe_confirmed['Country/Region']==admin0) & (globe_confirmed['Province/State']==kwargs['admin1'])]
-        sub_deaths=globe_deaths[(globe_deaths['Country/Region']==admin0) & (globe_deaths['Province/State']==kwargs['admin1'])]
+        sub_confirmed=globe_confirmed[(globe_confirmed['Country/Region']==kwargs['admin0']) & (globe_confirmed['Province/State']==kwargs['admin1'])]
+        sub_deaths=globe_deaths[(globe_deaths['Country/Region']==kwargs['admin0']) & (globe_deaths['Province/State']==kwargs['admin1'])]
         search_text=kwargs['admin1']
+    elif kwargs is not None and 'admin0' in kwargs: 
+        sub_confirmed=globe_confirmed[(globe_confirmed['Country/Region']==kwargs['admin0'])]
+        sub_deaths=globe_deaths[(globe_deaths['Country/Region']==kwargs['admin0'])]
+        search_text=kwargs['admin0']
     else:
-        sub_confirmed=globe_confirmed[(globe_confirmed['Country/Region']==admin0)]
-        sub_deaths=globe_deaths[(globe_deaths['Country/Region']==admin0)]
-        search_text=admin0
+        sub_confirmed=globe_confirmed
+        sub_deaths=globe_deaths
+        search_text='world'
         
     hdrs=[h for h in list(sub_confirmed) if h not in non_date_hdrs]
     
@@ -39,7 +43,12 @@ def slice_global_data(cases,deaths,admin0,**kwargs):
 
     return subdata, search_text
 
-def slice_US_data(data,search):
+def slice_US_data(data,**kwargs):
+    if kwargs=={}:
+        search='U.S.'
+    else:
+        search=kwargs['choice']
+        
     search_text=search
     
     if type(search)==str:
@@ -407,14 +416,14 @@ for s in sorted(list(set(globe_confirmed['Country/Region']))):
 ############# PLOT US STATE(s) DATA (New York Times database)
 
 #choose a state, or a list of states
-choice=['New York', 'New Jersey','Pennsylvania']
-choice=['California', 'Washington']
-choice='Pennsylvania'
+my_state=['New York', 'New Jersey','Pennsylvania']
+my_state=['California', 'Washington']
+my_state='Pennsylvania'
 
-#can also choose all of US
-choice='U.S.'
-
-subdata,choice_text=slice_US_data(states,choice)
+#if no choice is given, default is whole U.S.
+subdata,choice_text=slice_US_data(states,
+#                                  choice=my_state
+                                  )
 
 plot_covid(subdata,choice_text,
            fit=[60,70],
@@ -442,23 +451,24 @@ plot_covid(subdata,county_choice,
 #%%
 ############# PLOT GLOBAL DATA (JHU database)
 
-#pick a country or region (required)
-country='Canada'
+#pick a country or region
+cr='Canada'
 
 #pick a province or state (optional argument)
 #e.g. one from "admin1_lookup['Canada']"
+#MUST be given with admin0 argumument
 ps='British Columbia'
 
+#default with no choice given is world
 subdata,search=slice_global_data(globe_confirmed,globe_deaths,
-                          country,
+#                          admin0=cr,
 #                          admin1=ps
                           )
-
-
+#
 plot_covid(subdata,
            search,
            fit=[55,65],
-           xlow=20,
+#           xlow=20,
            fit_choice='both',
            yscale='linear')
 
