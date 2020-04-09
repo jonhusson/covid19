@@ -9,7 +9,37 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 
-def slice_data(data,search):
+def slice_global_data(cases,deaths,admin0,**kwargs):
+    non_date_hdrs=['Province/State',
+     'Country/Region',
+     'Lat',
+     'Long']
+
+    if kwargs is not None and 'admin1' in kwargs: 
+        sub_confirmed=globe_confirmed[(globe_confirmed['Country/Region']==admin0) & (globe_confirmed['Province/State']==kwargs['admin1'])]
+        sub_deaths=globe_deaths[(globe_deaths['Country/Region']==admin0) & (globe_deaths['Province/State']==kwargs['admin1'])]
+        search_text=kwargs['admin1']
+    else:
+        sub_confirmed=globe_confirmed[(globe_confirmed['Country/Region']==admin0)]
+        sub_deaths=globe_deaths[(globe_deaths['Country/Region']==admin0)]
+        search_text=admin0
+        
+    hdrs=[h for h in list(sub_confirmed) if h not in non_date_hdrs]
+    
+    subdata=[]
+    for h in hdrs:
+        subdata.append(tuple((h,sum(sub_confirmed[h]),sum(sub_deaths[h]))))
+
+    subdata=pd.DataFrame(subdata, columns=['date', 'cases', 'deaths'])        
+    subdata['date']=pd.to_datetime(subdata['date'])
+
+    subdata=subdata.sort_values(by=['date'])   
+    subdata=subdata[subdata['cases']!=0]
+    subdata=subdata.reset_index()
+
+    return subdata, search_text
+
+def slice_US_data(data,search):
     search_text=search
     
     if type(search)==str:
@@ -30,7 +60,7 @@ def slice_data(data,search):
         subdata.append(tuple((d,sum(tmp['cases']),sum(tmp['deaths']))))
 
     subdata=pd.DataFrame(subdata, columns=['date', 'cases', 'deaths'])        
-
+    
     subdata=subdata.sort_values(by=['date'])
     subdata=subdata.reset_index()
 
@@ -358,11 +388,23 @@ counties=counties.sort_values(by=['date'])
 #make dictionary of US counties, indexed to state
 county_lookup=dict()
 
-for s in list(set(counties['state'])):
+for s in sorted(list(set(counties['state']))):
     county_lookup[s]=list(set(counties['county'][counties['state']==s]))
 
 #%%
-############# PLOT STATE LEVEL DATA
+#JHU global time series
+globe_confirmed=pd.read_csv('https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv')
+globe_deaths=pd.read_csv('https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv')
+
+#make dictionary of states/provinces counties, indexed to country/region
+admin1_lookup=dict()
+
+for s in sorted(list(set(globe_confirmed['Country/Region']))):
+    admin1_lookup[s]=list(set(globe_confirmed['Province/State'][globe_confirmed['Country/Region']==s]))
+
+
+#%%
+############# PLOT US STATE(s) DATA (New York Times database)
 
 #choose a state, or a list of states
 choice=['New York', 'New Jersey','Pennsylvania']
@@ -372,7 +414,7 @@ choice='Pennsylvania'
 #can also choose all of US
 choice='U.S.'
 
-subdata,choice_text=slice_data(states,choice)
+subdata,choice_text=slice_US_data(states,choice)
 
 plot_covid(subdata,choice_text,
            fit=[60,70],
@@ -381,8 +423,10 @@ plot_covid(subdata,choice_text,
            yscale='linear')
 
 #%%
-############# PLOT COUNTY LEVEL DATA
+############# PLOT US COUNTY DATA (New York Times database)
 #choose a state and county
+#e.g. one from "county_lookup['New York']"
+
 state_choice='New York'
 county_choice='New York City'
 
@@ -394,5 +438,35 @@ plot_covid(subdata,county_choice,
            xlow=10,
            fit_choice='linear',
            yscale='linear')
+
+#%%
+############# PLOT GLOBAL DATA (JHU database)
+
+#pick a country or region (required)
+country='Canada'
+
+#pick a province or state (optional argument)
+#e.g. one from "admin1_lookup['Canada']"
+ps='British Columbia'
+
+subdata,search=slice_global_data(globe_confirmed,globe_deaths,
+                          country,
+#                          admin1=ps
+                          )
+
+
+plot_covid(subdata,
+           search,
+           fit=[55,65],
+           xlow=20,
+           fit_choice='both',
+           yscale='linear')
+
+
+
+
+
+
+
 
 
