@@ -394,22 +394,56 @@ counties['date']=pd.to_datetime(counties['date'])
 states=states.sort_values(by=['date'])
 counties=counties.sort_values(by=['date'])
 
+counties_today=counties[counties['date']==max(counties['date'])]
+
 #make dictionary of US counties, indexed to state
-county_lookup=dict()
+#also include total cases and deaths
 
+US_lookup=dict()
+
+#loop through states
 for s in sorted(list(set(counties['state']))):
-    county_lookup[s]=list(set(counties['county'][counties['state']==s]))
+    #generate unique list of counties in that state
+    US_lookup[s]=dict()
+    tmp=list(set(counties['county'][counties['state']==s]))
+    US_lookup[s]['counties']=list()
+    
+    #loop through counties to get case and death totals
+    for t in tmp:
+        tmp_numbers=counties_today[(counties_today['state']==s) & (counties_today['county']==t)]
+        if len(tmp_numbers)==0:
+            tmp_case=None
+            tmp_death=None
+        else:
+            tmp_case=int(tmp_numbers['cases'])
+            tmp_death=int(tmp_numbers['deaths'])
 
+        US_lookup[s]['counties'].extend([tuple((t,tmp_case,tmp_death))])
+        
+    #sort county list alphabetically
+    US_lookup[s]['counties']=sorted(list(set(US_lookup[s]['counties'])),key=lambda x: x[0])
+    
+    #also get total cases and deaths for that state
+    US_lookup[s]['cases']='{:,}'.format(int(list(states[states['state']==s]['cases'])[-1]))
+    US_lookup[s]['deaths']='{:,}'.format(int(list(states[states['state']==s]['deaths'])[-1]))
+    
 #%%
 #JHU global time series
 globe_confirmed=pd.read_csv('https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv')
 globe_deaths=pd.read_csv('https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv')
 
 #make dictionary of states/provinces counties, indexed to country/region
+#also include total cases and deaths
 admin1_lookup=dict()
 
+#latest date is last header
+hdrs=[h for h in list(globe_confirmed)]
+
 for s in sorted(list(set(globe_confirmed['Country/Region']))):
-    admin1_lookup[s]=list(set(globe_confirmed['Province/State'][globe_confirmed['Country/Region']==s]))
+    admin1_lookup[s]=dict()
+    admin1_lookup[s]['Province_Region']=list(set(globe_confirmed['Province/State'][globe_confirmed['Country/Region']==s]))
+    admin1_lookup[s]['cases']='{:,}'.format(sum(globe_confirmed[hdrs[-1]][globe_confirmed['Country/Region']==s]))
+    admin1_lookup[s]['deaths']='{:,}'.format(sum(globe_deaths[hdrs[-1]][globe_deaths['Country/Region']==s]))
 
 
 #%%
@@ -434,7 +468,7 @@ plot_covid(subdata,choice_text,
 #%%
 ############# PLOT US COUNTY DATA (New York Times database)
 #choose a state and county
-#e.g. one from "county_lookup['New York']"
+#e.g. one from "US_lookup['New York']['counties']"
 
 state_choice='New York'
 county_choice='New York City'
