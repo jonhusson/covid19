@@ -156,6 +156,11 @@ def plot_covid(subdata,choice,**kwargs):
     fit_choice  : string, 'exp', 'linear' or 'both': choose the type of model 
     to fit the data. Default is 'both', and shows exponential and linear model fits.
 
+    Returns
+    -------
+    all_axes : handles to all subplots
+    
+    -------
     Date created: April, 2020
     Last updated: April, 2020
     Author: Jon M. Husson, jhusson@uvic.ca	
@@ -176,6 +181,7 @@ def plot_covid(subdata,choice,**kwargs):
     if len(subdata)!=0:
         ############### MAKE FIRST SUBPLOT
         ax=fig.add_subplot(311)
+        all_axes=[ax]
         
         #label figure with chosen jurisdiction
         ax.text(0,1,
@@ -245,7 +251,8 @@ def plot_covid(subdata,choice,**kwargs):
 
         #make second y-axis
         ax2 = ax.twinx()
-        
+        all_axes.append(ax2)
+
         #plot cumulative deaths vs. day number
         ax2.plot(days,
                 subdata['deaths'],'-',lw=1, color='#B22222')
@@ -266,7 +273,8 @@ def plot_covid(subdata,choice,**kwargs):
 
         ############### MAKE SECOND SUBPLOT
         ax=fig.add_subplot(312)
-                
+        all_axes.append(ax)
+
         #plot case increase per day vs. day number
         ax.bar(np.array(days[0:-1])+0.5,
                np.diff(subdata['cases'])/np.diff(days),
@@ -305,7 +313,8 @@ def plot_covid(subdata,choice,**kwargs):
 
         #make second y-axis
         ax2 = ax.twinx()
-        
+        all_axes.append(ax2)
+
         #plot fatality increase per day vs. day number
         ax2.plot(days[1:],
                 np.diff(subdata['deaths'])/np.diff(days),'-',lw=1,color='#B22222')
@@ -319,7 +328,8 @@ def plot_covid(subdata,choice,**kwargs):
 
         ############### MAKE THIRD SUBPLOT
         ax=fig.add_subplot(313)
-        
+        all_axes.append(ax)
+
         #only conisder days since 100th case recorded
         idx=subdata['cases']>100
         days=days[idx]
@@ -353,12 +363,10 @@ def plot_covid(subdata,choice,**kwargs):
         ax.set_ylabel('% increase per day',color='#6495ED')
         ax.tick_params(axis='y', labelcolor='#6495ED')
         
-        #make y-axis labels comma-separated
-        ax.set_yticklabels(['{:,}'.format(int(x)) for x in ax.get_yticks().tolist()])
-
         #make second y-axis
         ax2 = ax.twinx()
-        
+        all_axes.append(ax2)
+
         #plot percent fatality increase per day vs. day number
         ax2.plot(days[1:],
                 (np.diff(subdata['deaths'])/np.diff(days))/subdata['deaths'][0:-1]*100,'-',lw=1,color='#B22222')
@@ -367,11 +375,11 @@ def plot_covid(subdata,choice,**kwargs):
         ylim=ax2.get_ylim()
         ax2.set_ylim([0,ylim[1]])
         
-        ax2.set_yticklabels(['{:,}'.format(int(x)) for x in ax2.get_yticks().tolist()])
-
         ax.set_xlabel('days since first case')
         ax.set_xlim(kwargs['xlim'])
         ax.grid(axis='x')
+        
+        return all_axes
         
     #case of no data found
     else:
@@ -459,7 +467,7 @@ subdata,choice_text=slice_US_data(states,
 #                                  choice=my_state
                                   )
 
-plot_covid(subdata,choice_text,
+all_axes=plot_covid(subdata,choice_text,
            fit=[60,70],
            xlow=40,
            fit_choice='both',
@@ -476,7 +484,7 @@ county_choice='New York City'
 subdata=counties[(counties['state']==state_choice) & (counties['county']==county_choice)]
 subdata=subdata.reset_index()
 
-plot_covid(subdata,county_choice,
+all_axes=plot_covid(subdata,county_choice,
            fit=[25,35],
            xlow=10,
            fit_choice='linear',
@@ -499,7 +507,7 @@ subdata,search=slice_global_data(globe_confirmed,globe_deaths,
 #                          admin1=ps
                           )
 #
-plot_covid(subdata,
+all_axes=plot_covid(subdata,
            search,
            fit=[55,65],
 #           xlow=20,
