@@ -9,6 +9,10 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 
+def movingaverage(interval, window_size):
+    window= np.ones(int(window_size))/float(window_size)
+    return np.convolve(interval, window, 'same')
+
 def slice_global_data(cases,deaths,**kwargs):
     non_date_hdrs=['Province/State',
      'Country/Region',
@@ -284,6 +288,17 @@ def plot_covid(subdata,choice,**kwargs):
                edgecolor='none',
                zorder=0)
         
+        #plot 5-day moving average
+        tosmooth=np.diff(subdata['cases'])/np.diff(days)
+        ma=movingaverage(tosmooth,5)
+        
+        #hack to dampen right-edge effect
+        ma[-1]=np.mean(tosmooth[-3:])
+        ma[-2]=np.mean(tosmooth[-4:])
+        
+        ax.plot(days[1:],
+                ma,'-',lw=2,color='#6495ED')
+
         ylim=ax.get_ylim()
         ax.set_ylim([0,ylim[1]])
         
@@ -317,7 +332,20 @@ def plot_covid(subdata,choice,**kwargs):
 
         #plot fatality increase per day vs. day number
         ax2.plot(days[1:],
-                np.diff(subdata['deaths'])/np.diff(days),'-',lw=1,color='#B22222')
+                np.diff(subdata['deaths'])/np.diff(days),'-',lw=0.5,color='#B22222')
+        
+        #plot 5-day moving average
+        tosmooth=np.diff(subdata['deaths'])/np.diff(days)
+        ma=movingaverage(tosmooth,5)
+        
+        #hack to dampen right-edge effect
+        ma[-1]=np.mean(tosmooth[-3:])
+        ma[-2]=np.mean(tosmooth[-4:])
+        
+        ax2.plot(days[1:],
+                ma,'-',lw=1.5,color='#B22222')
+                
+                
         ax2.set_ylabel('new deaths per day',color='#B22222')
         ax2.tick_params(axis='y', labelcolor='#B22222')
         ylim=ax2.get_ylim()
