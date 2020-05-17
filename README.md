@@ -3,7 +3,7 @@
 
 A Python script and associated functions (made with ```Python 3.7.4```) that allows you to dynamically create and analyze time series showing the progression of the novel coronavirus (COVID-19) in the United States (at the county/state level) and across the globe (at the state / country level):
 
-![COVID-19 cases and deaths in Pennsylvania, New Jersey and New York](PA-NJ-NY2.png)
+![COVID-19 cases and deaths in the United States](US.png)
 
 The script relies upon two publicly-available databases: 
 

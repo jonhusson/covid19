@@ -60,7 +60,12 @@ def slice_US_data(data,**kwargs):
 
     if search!=['U.S.']:
         if len(search)!=1:
-            search_text=', '.join(search[0:-1]) + ' and ' + search[-1]
+            search_tmp=search
+            
+            if len(search_tmp)>4:
+                search_tmp=search_tmp[0:3]+['...']+search_tmp[-1:]
+                
+            search_text=', '.join(search_tmp[0:-1]) + ' and ' + search_tmp[-1]
         else:
             search_text=search[0]
             
@@ -195,7 +200,7 @@ def plot_covid(subdata,choice,**kwargs):
                 verticalalignment='bottom')
         
         ax.text(1,1,
-                '%s total deaths' % '{:,}'.format(int(max(subdata['deaths']))),
+                '%s total deaths' % '{:,}'.format(int(subdata['deaths'][-1:])),
                 transform=ax.transAxes,
                 fontweight='bold',
                 color='#B22222',
@@ -203,7 +208,7 @@ def plot_covid(subdata,choice,**kwargs):
                 verticalalignment='bottom')
 
         ax.text(1,1.1,
-                '%s total cases' % '{:,}'.format(int(max(subdata['cases']))),
+                '%s total cases' % '{:,}'.format(int(subdata['cases'][-1:])),
                 transform=ax.transAxes,
                 fontweight='bold',
                 color='#6495ED',
@@ -326,6 +331,23 @@ def plot_covid(subdata,choice,**kwargs):
         #make y-axis labels comma-separated
         ax.set_yticklabels(['{:,}'.format(int(x)) for x in ax.get_yticks().tolist()])
 
+        #label with most recent case increase
+        ax.text(0.01,0.9,
+                'most recent increases:',
+                transform=ax.transAxes,
+                fontweight='bold',
+                horizontalalignment='left',
+                verticalalignment='bottom',
+                backgroundcolor='white')
+        
+        ax.text(0.01,0.78,
+                '%s cases per day' % '{:,}'.format(int(tosmooth[-1])),
+                transform=ax.transAxes,
+                color='#6495ED',
+                horizontalalignment='left',
+                verticalalignment='bottom',
+                backgroundcolor='white')
+        
         #make second y-axis
         ax2 = ax.twinx()
         all_axes.append(ax2)
@@ -354,6 +376,15 @@ def plot_covid(subdata,choice,**kwargs):
         #make y-axis labels comma-separated
         ax2.set_yticklabels(['{:,}'.format(int(x)) for x in ax2.get_yticks().tolist()])
 
+        #label with latest death increase rate
+        ax.text(0.01,0.66,
+                '%s deaths per day' % '{:,}'.format(int(tosmooth[-1])),
+                transform=ax.transAxes,
+                color='#B22222',
+                horizontalalignment='left',
+                verticalalignment='bottom',
+                backgroundcolor='white')
+        
         ############### MAKE THIRD SUBPLOT
         ax=fig.add_subplot(313)
         all_axes.append(ax)
