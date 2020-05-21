@@ -293,7 +293,7 @@ def plot_covid(subdata,choice,**kwargs):
                edgecolor='none',
                zorder=0)
         
-        #plot 5-day moving average
+        #plot 7-day moving average
         tosmooth=np.diff(subdata['cases'])/np.diff(days)
         ma=movingaverage(tosmooth,7)
         
@@ -358,7 +358,7 @@ def plot_covid(subdata,choice,**kwargs):
         ax2.plot(days[1:],
                 np.diff(subdata['deaths'])/np.diff(days),'-',lw=0.5,color='#B22222')
         
-        #plot 5-day moving average
+        #plot 7-day moving average
         tosmooth=np.diff(subdata['deaths'])/np.diff(days)
         ma=movingaverage(tosmooth,7)
         
