@@ -295,11 +295,13 @@ def plot_covid(subdata,choice,**kwargs):
         
         #plot 5-day moving average
         tosmooth=np.diff(subdata['cases'])/np.diff(days)
-        ma=movingaverage(tosmooth,5)
+        ma=movingaverage(tosmooth,7)
         
         #hack to dampen right-edge effect
-        ma[-1]=np.mean(tosmooth[-3:])
-        ma[-2]=np.mean(tosmooth[-4:])
+        ma[-1]=np.mean(tosmooth[-4:])
+        ma[-2]=np.mean(tosmooth[-5:])
+        ma[-3]=np.mean(tosmooth[-6:])
+
         
         ax.plot(days[1:],
                 ma,'-',lw=2,color='#6495ED')
@@ -358,11 +360,12 @@ def plot_covid(subdata,choice,**kwargs):
         
         #plot 5-day moving average
         tosmooth=np.diff(subdata['deaths'])/np.diff(days)
-        ma=movingaverage(tosmooth,5)
+        ma=movingaverage(tosmooth,7)
         
         #hack to dampen right-edge effect
-        ma[-1]=np.mean(tosmooth[-3:])
-        ma[-2]=np.mean(tosmooth[-4:])
+        ma[-1]=np.mean(tosmooth[-4:])
+        ma[-2]=np.mean(tosmooth[-5:])
+        ma[-3]=np.mean(tosmooth[-6:])
         
         ax2.plot(days[1:],
                 ma,'-',lw=1.5,color='#B22222')
@@ -527,9 +530,9 @@ subdata,choice_text=slice_US_data(states,
                                   )
 
 all_axes=plot_covid(subdata,choice_text,
-           fit=[60,70],
+           fit=[75,100],
            xlow=40,
-           fit_choice='both',
+           fit_choice='linear',
            yscale='linear')
 
 #%%
